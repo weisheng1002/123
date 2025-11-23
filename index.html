@@ -2,9 +2,16 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
+    <!-- 設定視窗寬度與縮放，禁止使用者縮放，讓體驗更像原生 App -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- iOS Safari 專用設定 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="六點輸入挑戰">
+    
+    <!-- Android / Chrome 專用設定 -->
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0f0c29">
 
     <title>黑暗中的對話:六點輸入的挑戰</title>
@@ -547,6 +554,7 @@
         // --- 全域音訊環境 (Web Audio API) ---
         let audioCtx;
 
+        // 初始化音訊環境 (必須在使用者互動下觸發)
         function initAudio() {
             if (!audioCtx) {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -557,7 +565,7 @@
             }
         }
 
-        // --- 生成勝利和弦 (Victory Chord) - Web Audio API 合成 ---
+        // --- 生成勝利和弦 (Victory Chord) ---
         function playSynthesizedVictory() {
             if (!audioCtx) initAudio();
             const now = audioCtx.currentTime;
@@ -575,7 +583,7 @@
                 const startTime = now + (index * 0.05);
                 const duration = 0.8; 
 
-                // 音量放大
+                // Volume Boost: 0.6
                 gainNode.gain.setValueAtTime(0.6, startTime);
                 gainNode.gain.linearRampToValueAtTime(0.01, startTime + duration);
                 
@@ -599,11 +607,10 @@
         
         const keyToDotMap = { 'f': 1, 'd': 2, 's': 3, 'j': 4, 'k': 5, 'l': 6 };
         
-        // --- 聲調發音對照表 ---
-        // 這裡移除了所有會被擋的 Google 連結，改為純文字讓瀏覽器朗讀
+        // --- 聲調發音對照表 (1聲, 2聲...) ---
         const toneMap = {
             'ˉ': '1聲',
-            'ˊ': '二聲', // 使用中文字 "二"，避免讀成 "兩"
+            'ˊ': '2聲', 
             'ˇ': '3聲',
             'ˋ': '4聲',
             '˙': '輕聲'
@@ -673,21 +680,40 @@
             currentChord: new Set(), synth: window.speechSynthesis, isListening: false
         };
 
-        // --- 語音選擇：優先尋找男聲 ---
+        // --- 語音選擇：優先尋找男聲，並嚴格過濾掉粵語 (zh-HK) ---
         let preferredMaleVoice = null;
         function updateVoices() {
             const voices = window.speechSynthesis.getVoices();
-            // 優先順序：Microsoft Yunxi/Danny/Kangkang > 含 Male 的中文 > 任何中文
-            preferredMaleVoice = voices.find(v => v.lang.includes('zh') && (v.name.includes('Yunxi') || v.name.includes('Danny') || v.name.includes('Kangkang') || v.name.includes('Male')));
             
-            // 找不到男聲則找 Google 國語 或 系統預設中文
-            if (!preferredMaleVoice) {
-                preferredMaleVoice = voices.find(v => v.name.includes('Google') && v.lang.includes('zh')) || voices.find(v => v.lang.includes('zh'));
-            }
+            // 過濾條件：語言代碼包含 'zh' 但不包含 'HK' (過濾粵語)
+            const chineseVoices = voices.filter(v => v.lang.includes('zh') && !v.lang.includes('HK'));
+            
+            // 優先順序：Microsoft Yunxi/Danny/Kangkang > 含 Male 的中文 > 台灣繁中 > 任何中文
+            preferredMaleVoice = chineseVoices.find(v => v.name.includes('Yunxi') || v.name.includes('Danny') || v.name.includes('Kangkang')) ||
+                                 chineseVoices.find(v => v.name.includes('Male')) ||
+                                 chineseVoices.find(v => v.lang.includes('TW')) ||
+                                 chineseVoices[0];
         }
         window.speechSynthesis.onvoiceschanged = updateVoices;
         updateVoices(); 
 
+        // 瀏覽器機械音 (System TTS)
+        function speakBrowser(text, callback) {
+            if (gameState.synth.speaking) { gameState.synth.cancel(); }
+            const textToSpeak = pronunciationFallback[text] || text;
+            const utterance = new SpeechSynthesisUtterance(textToSpeak);
+            
+            // 確保不使用粵語
+            if (preferredMaleVoice) {
+                utterance.voice = preferredMaleVoice;
+            }
+            
+            utterance.lang = 'zh-TW';
+            utterance.rate = 0.9;
+            utterance.onend = () => { if (callback) callback(); };
+            gameState.synth.speak(utterance);
+        }
+        
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -726,9 +752,9 @@
         function speak(text, callback) {
             if (gameState.synth.speaking) { gameState.synth.cancel(); }
 
-            // 1. 檢查是否為 "闖關成功" (強制機械音/預設音)
-            // 這裡不指定 preferredMaleVoice，讓它使用系統最原始的聲音，通常聽起來比較"機械"
+            // 1. "闖關成功" 強制使用機械音
             if (text === "闖關成功") {
+                // 使用未指定的 utterance 以觸發最原始的系統音
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'zh-TW';
                 utterance.rate = 0.9;
@@ -737,11 +763,10 @@
                 return;
             }
 
-            // 2. 聲調符號轉換 (如: ˊ -> 二聲)
+            // 2. 聲調符號轉換
             const spokenText = toneMap[text] || pronunciationFallback[text] || text;
             
             const utterance = new SpeechSynthesisUtterance(spokenText);
-            // 3. 使用優選的男聲 (如果有的話)
             if (preferredMaleVoice) {
                 utterance.voice = preferredMaleVoice;
             }
@@ -882,6 +907,7 @@
                         });
                     });
                 } else {
+                    // 自然語音唸出：1聲、2聲...
                     speak(targetChar); 
                     multiBrailleContainer.children[gameState.wordChallengeIndex].classList.remove('active-challenge');
                     gameState.wordChallengeIndex++;
@@ -906,7 +932,9 @@
         }
         
         startBtn.addEventListener('click', () => {
+            // 點擊時初始化 AudioContext
             initAudio();
+            
             generateLevels();
             switchScreen('game-screen');
             gameState.level = 0;
