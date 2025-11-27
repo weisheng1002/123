@@ -2,15 +2,12 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <!-- 設定視窗寬度與縮放，禁止使用者縮放，讓體驗更像原生 App -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <!-- iOS Safari 專用設定 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="六點輸入挑戰">
     
-    <!-- Android / Chrome 專用設定 -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0f0c29">
 
@@ -23,7 +20,7 @@
             --bg-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
             --text-main: #ffffff;
             --text-secondary: #b3b3b3;
-            --accent-color: #4CAF50;
+            --accent-color: #00d2ff;
             --dot-inactive: #2a2a2a;
             --dot-active: #ffeb3b;
             --dot-glow: rgba(255, 235, 59, 0.6);
@@ -71,6 +68,25 @@
             transition: all 0.3s ease;
         }
 
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin-bottom: 25px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-color), #00ff88);
+            border-radius: 10px;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+        }
+
         .screen {
             display: none;
             opacity: 0;
@@ -91,7 +107,7 @@
         }
 
         .event-title {
-            font-size: 2.2rem;
+            font-size: 1.8rem;
             font-weight: 700;
             letter-spacing: 2px;
             color: #fff;
@@ -101,10 +117,10 @@
         }
 
         .event-subtitle {
-            font-size: 1.6rem;
+            font-size: 1.4rem;
             font-weight: bold;
             color: var(--accent-color);
-            background: rgba(76, 175, 80, 0.15);
+            background: rgba(0, 210, 255, 0.15);
             padding: 8px 20px;
             border-radius: 30px;
             display: inline-block;
@@ -112,7 +128,7 @@
         }
 
         h1 {
-            font-size: 3rem;
+            font-size: 2.5rem;
             font-weight: 700;
             margin: 10px 0 30px;
             text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
@@ -137,7 +153,7 @@
         }
 
         button {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
+            background: linear-gradient(135deg, #00b4db, #0083b0);
             color: white;
             border: none;
             padding: 15px 50px;
@@ -146,7 +162,7 @@
             cursor: pointer;
             border-radius: 50px;
             transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+            box-shadow: 0 5px 15px rgba(0, 180, 219, 0.4);
             letter-spacing: 1px;
             margin-top: 20px;
             min-height: 60px;
@@ -155,7 +171,7 @@
 
         button:hover {
             transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 8px 20px rgba(76, 175, 80, 0.6);
+            box-shadow: 0 8px 20px rgba(0, 180, 219, 0.6);
         }
 
         button:active {
@@ -366,7 +382,8 @@
         }
         
         .game-container.level-2-active .mini-braille-dot {
-            width: 40px; height: 40px;
+            width: 40px;
+            height: 40px;
         }
         
         .game-container.level-2-active .mini-number {
@@ -446,6 +463,19 @@
             text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
         }
 
+        /* 語音狀態指示 */
+        #voice-status {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            background: rgba(0,0,0,0.3);
+            padding: 5px 10px;
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
         @media (max-height: 800px) {
             .game-container { padding: 20px; }
             #challenge-char { height: 100px; font-size: 6rem; }
@@ -461,28 +491,37 @@
 </head>
 <body>
     <div class="game-container">
+        <div id="voice-status">檢查語音中...</div>
         <div id="welcome-screen" class="screen active">
             <div class="event-title">國立彰化特殊教育學校身心障礙宣導周</div>
             <div class="event-subtitle">視障組體驗</div>
             <h1>黑暗中的對話<br><span style="font-size:0.6em; color:#888;">六點輸入挑戰</span></h1>
             
-            <p>透過鍵盤上的六個按鍵，模擬盲文輸入機的操作。</p>
+            <p>透過鍵盤上的六個按鍵，模擬點字機的操作。</p>
+        
             <ol class="level-list">
                 <li><strong>注音練習：</strong> 熟悉基本點字代碼</li>
                 <li><strong>國字試煉：</strong> 挑戰拼出完整的國字</li>
-                <li><strong>視讀挑戰：</strong> 聽點位提示，輸入後聽發音</li>
+                <li><strong>聽寫挑戰：</strong> 聽點位提示，輸入後聽發音</li>
             </ol>
             
             <button id="start-btn">開始挑戰</button>
+            <div style="margin-top:20px; color: #00d2ff; font-size: 0.9rem;">提示：若使用 Edge 瀏覽器可獲得最佳微軟自然語音體驗</div>
+       
         </div>
 
         <div id="game-screen" class="screen">
+            <div class="progress-container">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            
             <div id="level-title"></div>
             <h2 id="instruction"></h2>
             
             <div id="challenge-char"></div>
             
             <div class="braille-display-wrapper">
+             
                 <div id="single-braille-display-container" class="braille-display-with-numbers">
                     <div class="braille-number-col">
                         <span class="braille-number">1</span>
@@ -530,6 +569,7 @@
                     <span class="dot-number">5</span>
                     <span class="key-letter">K</span>
                 </div>
+                
                 <div class="key-vis" data-key="l">
                     <span class="dot-number">6</span>
                     <span class="key-letter">L</span>
@@ -550,11 +590,11 @@
         const singleBrailleGrid = gameScreen.querySelector('.braille-grid');
         const multiBrailleContainer = document.getElementById('multi-braille-container');
         const feedback = document.getElementById('feedback');
-        
+        const progressFill = document.getElementById('progress-fill');
+        const voiceStatus = document.getElementById('voice-status');
+
         // --- 全域音訊環境 (Web Audio API) ---
         let audioCtx;
-
-        // 初始化音訊環境 (必須在使用者互動下觸發)
         function initAudio() {
             if (!audioCtx) {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -565,77 +605,91 @@
             }
         }
 
-        // --- 生成勝利和弦 (Victory Chord) ---
+        // --- 打字音效 ---
+        function playKeySound() {
+            if (!audioCtx) return;
+            const t = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
+            const compressor = audioCtx.createDynamicsCompressor();
+
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(600, t);
+            osc.frequency.exponentialRampToValueAtTime(100, t + 0.05);
+            
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(2000, t);
+            filter.frequency.linearRampToValueAtTime(500, t + 0.05);
+
+            gain.gain.setValueAtTime(1.0, t);
+            gain.gain.exponentialRampToValueAtTime(0.01, t + 0.08);
+
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(compressor);
+            compressor.connect(audioCtx.destination);
+            
+            osc.start(t);
+            osc.stop(t + 0.1);
+        }
+
+        // --- 勝利音效 ---
         function playSynthesizedVictory() {
             if (!audioCtx) initAudio();
             const now = audioCtx.currentTime;
+            const compressor = audioCtx.createDynamicsCompressor();
+            compressor.connect(audioCtx.destination);
             
-            // C Major Chord (C, E, G, C)
             const frequencies = [523.25, 659.25, 783.99, 1046.50];
-
             frequencies.forEach((freq, index) => {
                 const osc = audioCtx.createOscillator();
                 const gainNode = audioCtx.createGain();
-                
                 osc.type = 'triangle'; 
                 osc.frequency.value = freq;
-                
                 const startTime = now + (index * 0.05);
                 const duration = 0.8; 
-
-                // Volume Boost: 0.6
-                gainNode.gain.setValueAtTime(0.6, startTime);
+                gainNode.gain.setValueAtTime(0.8, startTime); 
                 gainNode.gain.linearRampToValueAtTime(0.01, startTime + duration);
-                
                 osc.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                
+                gainNode.connect(compressor);
                 osc.start(startTime);
                 osc.stop(startTime + duration + 0.1);
             });
         }
         
         const brailleMap = {
-            'ㄅ': [1,3,5], 'ㄆ': [1,2,3,4], 'ㄇ': [1,3,4], 'ㄈ': [1,2,3,4,5], 'ㄉ': [1,4,5], 'ㄊ': [1,2,4], 'ㄋ': [1,3,4,5], 'ㄌ': [1,2], 'ㄍ': [1,3], 'ㄎ': [1,2,3], 'ㄏ': [1,2,3,5], 'ㄐ': [2,4], 'ㄑ': [2,4,5], 'ㄒ': [1,5], 'ㄓ': [1], 'ㄔ': [1,2], 'ㄕ': [2,4], 'ㄖ': [1,2,4,5], 'ㄗ': [1,2,5], 'ㄘ': [2,4,5], 'ㄙ': [2,5], 
+            'ㄅ': [1,3,5], 'ㄆ': [1,2,3,4], 'ㄇ': [1,3,4], 'ㄈ': [1,2,3,4,5], 'ㄉ': [1,4,5], 'ㄊ': [1,2,4], 'ㄋ': [1,3,4,5], 'ㄌ': [1,2], 'ㄍ': [1,3], 'ㄎ': [1,2,3], 'ㄏ': [1,2,3,5], 'ㄐ': [1,3], 'ㄑ': [2,4,5], 'ㄒ': [1,5], 'ㄓ': [1], 'ㄔ': [1,2], 'ㄕ': [2,4], 'ㄖ': [1,2,4,5], 'ㄗ': [1,2,5], 'ㄘ': [2,4,5], 'ㄙ': [1,5], 
             'ㄧ': [1,6], 'ㄨ': [3,4], 'ㄩ': [1,2,5,6], 
             'ㄚ': [3,4,5], 'ㄛ': [1,2,6], 'ㄜ': [2,3,4,6], 'ㄝ': [2,6], 'ㄞ': [2,4,5,6], 'ㄟ': [3,5,6], 'ㄠ': [1,4,6], 'ㄡ': [1,2,3,5,6], 'ㄢ': [1,2,3,6], 'ㄣ': [1,3,6], 'ㄤ': [1,3,4,6], 'ㄥ': [1,3,5,6], 'ㄦ': [1,5,6],
-            'ㄧㄚ': [2,3,4,5,6], 'ㄧㄝ': [3,4,6], 'ㄧㄠ': [2,4,6], 'ㄧㄡ': [2,3,4], 'ㄧㄢ': [2,3,4,5], 'ㄧㄣ': [1,4,5,6], 'ㄧㄤ': [4,6], 'ㄧㄥ': [1,3,4,5,6], 'ㄧㄛ': [3,5,6],
+            'ㄧㄚ': [2,3,4,5,6], 'ㄧㄝ': [3,4,6], 'ㄧㄠ': [2,4,6], 'ㄧㄡ': [2,3,4], 'ㄧㄢ': [2,3,4,5], 'ㄧㄣ': [1,4,5,6], 'ㄧㄤ': [4,6], 'ㄧㄥ': [1,3,4,5,6], 'ㄧㄛ': [3,5,6],'ㄧㄞ': [2,6],
             'ㄨㄚ': [3,5], 'ㄨㄛ': [2,5], 'ㄨㄞ': [2,3,5,6], 'ㄨㄟ': [1,2,4,6], 'ㄨㄢ': [1,2,4,5,6], 'ㄨㄣ': [1,2,3,4,5,6], 'ㄨㄤ': [4,5,6], 'ㄨㄥ': [1,2,3,4,6],
             'ㄩㄝ': [2,3,6], 'ㄩㄢ': [4,5], 'ㄩㄣ': [2,5,6], 'ㄩㄥ': [2,3,5],
             'ˉ': [3], 'ˊ': [2], 'ˇ': [4], 'ˋ': [5], '˙': [1],
         };
-        
         const keyToDotMap = { 'f': 1, 'd': 2, 's': 3, 'j': 4, 'k': 5, 'l': 6 };
         
-        // --- 聲調發音對照表 (1聲, 2聲...) ---
-        const toneMap = {
-            'ˉ': '1聲',
-            'ˊ': '2聲', 
-            'ˇ': '3聲',
-            'ˋ': '4聲',
-            '˙': '輕聲'
-        };
-        
-        const pronunciationFallback = {
-            'ㄛ': '喔', 'ㄜ': '鵝', 'ㄝ': '耶', 
-            'ㄞ': '哀', 'ㄟ': '欸', 'ㄠ': '熬', 'ㄡ': '歐', 
-            'ㄢ': '安', 'ㄣ': '恩', 'ㄤ': '昂', 'ㄥ': '亨', 'ㄦ': '兒'
+        // 聲調名稱
+        const toneMap = { 'ˉ': '1聲', 'ˊ': '二聲', 'ˇ': '3聲', 'ˋ': '4聲', '˙': '輕聲' };
+
+        // 結合韻發音對照表 (確保唸出單一音節)
+        const compoundRhymeMap = {
+            'ㄧㄚ': '呀', 'ㄧㄛ': '唷', 'ㄧㄝ': '耶', 'ㄧㄞ': '崖', 'ㄧㄠ': '腰', 'ㄧㄡ': '優', 'ㄧㄢ': '煙', 'ㄧㄣ': '音', 'ㄧㄤ': '央', 'ㄧㄥ': '英',
+            'ㄨㄚ': '蛙', 'ㄨㄛ': '窩', 'ㄨㄞ': '歪', 'ㄨㄟ': '威', 'ㄨㄢ': '彎', 'ㄨㄣ': '溫', 'ㄨㄤ': '汪', 'ㄨㄥ': '翁',
+            'ㄩㄝ': '約', 'ㄩㄢ': '冤', 'ㄩㄣ': '暈', 'ㄩㄥ': '雍'
         };
         
         const visualKeyMap = new Map();
         document.querySelectorAll('.key-vis').forEach(keyEl => {
             visualKeyMap.set(keyEl.dataset.key, keyEl);
         });
-
         const levels = [
             { title: "第 1 關：注音練習", type: "chars", count: 5, isVisual: true, content: [] },
             { title: "第 2 關：國字試煉", type: "words", count: 4, isVisual: true, content: [] },
-            { title: "第 3 關：視讀挑戰", type: "chars", count: 5, isVisual: true, content: [] }
+            { title: "第 3 關：聽寫挑戰", type: "chars", count: 5, isVisual: true, content: [] }
         ];
-
         const allSymbols = Object.keys(brailleMap);
-        const zhuyinPhonetics = allSymbols.filter(char => !['ˉ', 'ˊ', 'ˇ', 'ˋ', '˙'].includes(char)); 
-        
+        const zhuyinPhonetics = allSymbols.filter(char => !['ˉ', 'ˊ', 'ˇ', 'ˋ', '˙'].includes(char));
         const wordBank = [
             { display: "愛", input: "ㄞˋ" }, { display: "安", input: "ㄢˉ" }, { display: "八", input: "ㄅㄚˉ" }, { display: "爸", input: "ㄅㄚˋ" }, { display: "白", input: "ㄅㄞˊ" },
             { display: "百", input: "ㄅㄞˇ" }, { display: "班", input: "ㄅㄢˉ" }, { display: "幫", input: "ㄅㄤˉ" }, { display: "包", input: "ㄅㄠˉ" }, { display: "杯", input: "ㄅㄟˉ" },
@@ -674,46 +728,92 @@
             { display: "圓", input: "ㄩㄢˊ" }, { display: "月", input: "ㄩㄝˋ" }, { display: "雲", input: "ㄩㄣˊ" }, { display: "再", input: "ㄗㄞˋ" }, { display: "早", input: "ㄗㄠˇ" },
             { display: "張", input: "ㄓㄤˉ" }, { display: "找", input: "ㄓㄠˇ" }, { display: "這", input: "ㄓㄜˋ" }, { display: "中", input: "ㄓㄨㄥˉ" }, { display: "字", input: "ㄗˋ" }
         ];
-
         let gameState = {
             level: 0, challengeIndex: 0, wordChallengeIndex: 0, currentWordSequence: [],
-            currentChord: new Set(), synth: window.speechSynthesis, isListening: false
+            currentChord: new Set(), synth: window.speechSynthesis, isListening: false, voice: null,
+            usingMicrosoft: false
         };
+        
+        // --- 核心邏輯：語音選擇 ---
+        function initVoices() {
+            const voices = gameState.synth.getVoices();
+            
+            // 尋找微軟自然語音
+            const msVoice = voices.find(v => 
+                (v.name.includes('Microsoft') && v.name.includes('HsiaoChen')) || 
+                (v.name.includes('Microsoft') && v.name.includes('YunJhe')) ||
+                (v.name.includes('Microsoft') && v.lang === 'zh-TW')
+            );
 
-        // --- 語音選擇：優先尋找男聲，並嚴格過濾掉粵語 (zh-HK) ---
-        let preferredMaleVoice = null;
-        function updateVoices() {
-            const voices = window.speechSynthesis.getVoices();
-            
-            // 過濾條件：語言代碼包含 'zh' 但不包含 'HK' (過濾粵語)
-            const chineseVoices = voices.filter(v => v.lang.includes('zh') && !v.lang.includes('HK'));
-            
-            // 優先順序：Microsoft Yunxi/Danny/Kangkang > 含 Male 的中文 > 台灣繁中 > 任何中文
-            preferredMaleVoice = chineseVoices.find(v => v.name.includes('Yunxi') || v.name.includes('Danny') || v.name.includes('Kangkang')) ||
-                                 chineseVoices.find(v => v.name.includes('Male')) ||
-                                 chineseVoices.find(v => v.lang.includes('TW')) ||
-                                 chineseVoices[0];
-        }
-        window.speechSynthesis.onvoiceschanged = updateVoices;
-        updateVoices(); 
+            // 尋找任何台灣繁體中文語音
+            const zhTwVoice = voices.find(v => v.lang === 'zh-TW');
 
-        // 瀏覽器機械音 (System TTS)
-        function speakBrowser(text, callback) {
-            if (gameState.synth.speaking) { gameState.synth.cancel(); }
-            const textToSpeak = pronunciationFallback[text] || text;
-            const utterance = new SpeechSynthesisUtterance(textToSpeak);
-            
-            // 確保不使用粵語
-            if (preferredMaleVoice) {
-                utterance.voice = preferredMaleVoice;
+            if (msVoice) {
+                gameState.voice = msVoice;
+                gameState.usingMicrosoft = true;
+                voiceStatus.textContent = `使用微軟語音: ${msVoice.name.split(' ')[1] || 'Natural'}`;
+                voiceStatus.style.color = '#00ff88';
+            } else if (zhTwVoice) {
+                gameState.voice = zhTwVoice;
+                gameState.usingMicrosoft = false; // 非微軟自然語音，可能效果不好，會觸發 Google Fallback
+                voiceStatus.textContent = "未偵測到微軟自然語音 (使用備用方案)";
+                voiceStatus.style.color = '#ffeb3b';
+            } else {
+                gameState.voice = null;
+                gameState.usingMicrosoft = false;
+                voiceStatus.textContent = "使用 Google 雲端語音";
             }
+        }
+        
+        if (window.speechSynthesis.onvoiceschanged !== undefined) {
+            window.speechSynthesis.onvoiceschanged = initVoices;
+        }
+        // 嘗試初始化
+        setTimeout(initVoices, 500);
+
+        // 使用瀏覽器內建語音 (Microsoft Edge Natural)
+        function speakNative(text, callback) {
+            if (gameState.synth.speaking) { gameState.synth.cancel(); }
             
+            const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'zh-TW';
-            utterance.rate = 0.9;
+            utterance.rate = 1.0; 
+            utterance.volume = 1.0; 
+
+            if (gameState.voice) {
+                utterance.voice = gameState.voice;
+            }
+
             utterance.onend = () => { if (callback) callback(); };
+            
+            // 修正：部分瀏覽器可能在 utterance 被垃圾回收時停止播放，將其掛在 window 上防止
+            window.currentUtterance = utterance; 
+
             gameState.synth.speak(utterance);
         }
         
+        // 使用 Google TTS (單軌 - 已取消疊加)
+        function speakGoogle(text, callback) {
+            const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=zh-TW&q=${encodeURIComponent(text)}`;
+            
+            const audio = new Audio(url);
+            audio.volume = 1.0;
+
+            audio.onended = () => { if (callback) callback(); };
+            
+            // 如果連 Google 都失敗，最後嘗試瀏覽器預設
+            audio.onerror = () => { 
+                console.warn("Google TTS failed");
+                if (gameState.voice) speakNative(text, callback);
+            };
+
+            // 嘗試播放
+            audio.play().catch(e => {
+                // 如果被瀏覽器阻擋，嘗試使用 Native Fallback
+                 if (gameState.voice) speakNative(text, callback);
+            });
+        }
+
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -749,43 +849,26 @@
             return result;
         }
         
+        // 主發音函式
         function speak(text, callback) {
-            if (gameState.synth.speaking) { gameState.synth.cancel(); }
-
-            // 1. "闖關成功" 強制使用機械音
-            if (text === "闖關成功") {
-                // 使用未指定的 utterance 以觸發最原始的系統音
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'zh-TW';
-                utterance.rate = 0.9;
-                utterance.onend = () => { if (callback) callback(); };
-                gameState.synth.speak(utterance);
-                return;
-            }
-
-            // 2. 聲調符號轉換
-            const spokenText = toneMap[text] || pronunciationFallback[text] || text;
+            // 優先使用結合韻對照表，確保唸出單一音節；其次是聲調轉換；最後是原音
+            let speakText = compoundRhymeMap[text] || toneMap[text] || text;
             
-            const utterance = new SpeechSynthesisUtterance(spokenText);
-            if (preferredMaleVoice) {
-                utterance.voice = preferredMaleVoice;
-            }
-            utterance.lang = 'zh-TW';
-            utterance.rate = 0.9; 
-            utterance.onend = () => { if (callback) callback(); };
+            // 判斷策略：
+            // 1. 如果有偵測到微軟自然語音 (HsiaoChen/YunJhe)，優先使用 speakNative (延遲低、音質好、原音準)
+            // 2. 如果沒有微軟語音，則使用 speakGoogle (單軌)
             
-            gameState.synth.speak(utterance);
+            if (gameState.usingMicrosoft) {
+                speakNative(speakText, callback);
+            } else {
+                speakGoogle(speakText, callback);
+            }
         }
 
         // --- 核心邏輯：通關處理 ---
         function handleVictory() {
-            // 使用合成音播放馬力歐旋律
             playSynthesizedVictory();
-            
-            // 機械音唸出
             speak("闖關成功");
-            
-            // 顯示畫面
             endGame();
         }
 
@@ -794,10 +877,21 @@
             document.getElementById(screenId).classList.add('active');
         }
 
+        function updateProgressBar() {
+            if (gameState.level >= levels.length) {
+                progressFill.style.width = '100%';
+                return;
+            }
+            const currentLevel = levels[gameState.level];
+            const progress = (gameState.challengeIndex / currentLevel.content.length) * 100;
+            progressFill.style.width = `${progress}%`;
+        }
+
         function setupLevel() {
             const currentLevel = levels[gameState.level];
             levelTitle.textContent = currentLevel.title;
             gameState.challengeIndex = 0;
+            updateProgressBar(); 
             nextChallenge();
         }
 
@@ -806,7 +900,6 @@
             feedback.textContent = '';
             gameState.currentChord.clear();
             
-            // 通關檢查
             if (gameState.level >= levels.length) { 
                 handleVictory();
                 return;
@@ -815,8 +908,9 @@
             const currentLevel = levels[gameState.level];
             if (gameState.challengeIndex >= currentLevel.content.length) {
                 gameState.level++;
+                updateProgressBar();
                 if (gameState.level < levels.length) { 
-                    speak("很好，進入下一關。", setupLevel); 
+                    speak("很好，進入下一關。", setupLevel);
                 } else { 
                     handleVictory();
                 }
@@ -835,7 +929,6 @@
                 gameState.currentWordSequence = parseZhuyin(challengeItem.input);
                 gameState.wordChallengeIndex = 0;
                 challengeChar.textContent = challengeItem.display;
-                
                 for (const zhuyinChar of gameState.currentWordSequence) {
                     const dots = brailleMap[zhuyinChar] || [];
                     const wrapper = document.createElement('div');
@@ -876,7 +969,6 @@
                     const dotNum = [1, 4, 2, 5, 3, 6][idx];
                     dot.classList.toggle('active', dots.includes(dotNum));
                 });
-                
                 if (gameState.level === 2) { 
                     const dotString = dots.join('、');
                     prompt_text = `請輸入，點 ${dotString}`;
@@ -903,12 +995,12 @@
                         const wordDisplay = challengeChar.textContent;
                         speak(`${wordDisplay}, 正確！`, () => {
                             gameState.challengeIndex++;
+                            updateProgressBar(); 
                             setTimeout(nextChallenge, 150);
                         });
                     });
                 } else {
-                    // 自然語音唸出：1聲、2聲...
-                    speak(targetChar); 
+                    speak(targetChar);
                     multiBrailleContainer.children[gameState.wordChallengeIndex].classList.remove('active-challenge');
                     gameState.wordChallengeIndex++;
                     multiBrailleContainer.children[gameState.wordChallengeIndex].classList.add('active-challenge');
@@ -918,6 +1010,7 @@
             } else {
                 speak(targetChar, () => {
                     gameState.challengeIndex++;
+                    updateProgressBar();
                     setTimeout(nextChallenge, 150);
                 });
             }
@@ -932,9 +1025,9 @@
         }
         
         startBtn.addEventListener('click', () => {
-            // 點擊時初始化 AudioContext
             initAudio();
-            
+            // 手動觸發一次 getVoices 確保 Safari/Chrome 在點擊後載入語音
+            initVoices();
             generateLevels();
             switchScreen('game-screen');
             gameState.level = 0;
@@ -949,6 +1042,10 @@
             const key = e.key.toLowerCase();
             if (visualKeyMap.has(key)) {
                 visualKeyMap.get(key).classList.add('pressed');
+            }
+
+            if (['s', 'd', 'f', 'j', 'k', 'l'].includes(key)) {
+                playKeySound();
             }
 
             if (!gameState.isListening) return;
@@ -971,7 +1068,7 @@
                 }
             }
         });
-        
+
         window.addEventListener('keyup', (e) => {
             const key = e.key.toLowerCase();
             if (visualKeyMap.has(key)) {
