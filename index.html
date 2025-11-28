@@ -491,7 +491,7 @@
             z-index: 2000;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.5s;
+            transition: opacity 0.25s; /* 修改：縮短淡入淡出時間 */
             backdrop-filter: blur(5px); /* 毛玻璃效果 */
         }
         #transition-overlay.show {
@@ -511,7 +511,7 @@
         
         /* 啟動動畫時的樣式 */
         #transition-overlay.show .transition-content {
-            animation: zoomIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            animation: zoomIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; /* 修改：縮短動畫時間 */
         }
 
         @keyframes zoomIn {
@@ -569,7 +569,7 @@
     <!-- 過場動畫層 -->
     <div id="transition-overlay">
         <div class="transition-content">
-            <h2 class="transition-title">關卡完成</h2>
+            <h2 class="transition-title" id="transition-main-title">關卡完成</h2>
             <p class="transition-subtitle">即將進入</p>
             <h1 class="transition-next-level" id="transition-level-name">下一關名稱</h1>
         </div>
@@ -591,8 +591,6 @@
             </ol>
             
             <button id="start-btn">開始挑戰</button>
-            <div style="margin-top:20px; color: #00d2ff; font-size: 0.9rem;">提示：若使用 Edge 瀏覽器可獲得最佳微軟自然語音體驗</div>
-       
         </div>
 
         <div id="game-screen" class="screen">
@@ -681,6 +679,7 @@
         // 過場動畫元素
         const transitionOverlay = document.getElementById('transition-overlay');
         const transitionLevelName = document.getElementById('transition-level-name');
+        const transitionMainTitle = document.getElementById('transition-main-title'); // 新增：主要標題元素
 
         // --- 全域音訊環境 (Web Audio API) ---
         let audioCtx;
@@ -982,7 +981,8 @@
         }
         
         // 顯示過場特效 (文字版)
-        function showTransitionEffect(nextLevelTitle) {
+        function showTransitionEffect(nextLevelTitle, mainTitle = "關卡完成") {
+            if(transitionMainTitle) transitionMainTitle.textContent = mainTitle;
             transitionLevelName.textContent = nextLevelTitle;
             transitionOverlay.classList.add('show');
         }
@@ -1029,16 +1029,14 @@
 
                 if (gameState.level + 1 < levels.length) { 
                     // 1. 顯示過場特效 (傳入下一關標題)
-                    showTransitionEffect(levels[gameState.level + 1].title);
+                    showTransitionEffect(levels[gameState.level + 1].title, "關卡完成");
                     
                     // 2. 播放語音
                     speak("很好，進入下一關。", () => {
-                        // 3. 語音結束後，等待一小段時間再切換，讓玩家看清楚特效
-                        setTimeout(() => {
-                            hideTransitionEffect();
-                            gameState.level++;
-                            setupLevel();
-                        }, 1500); // 1.5秒後進入下一關
+                        // 3. 語音結束後，立即切換 (移除 setTimeout)
+                        hideTransitionEffect();
+                        gameState.level++;
+                        setupLevel();
                     });
                 } else { 
                     handleVictory();
@@ -1170,10 +1168,14 @@
             generateLevels();
             switchScreen('game-screen');
             gameState.level = 0;
+            
+            // 顯示第一關的過場特效，並設定標題為 "準備挑戰"
+            showTransitionEffect(levels[0].title, "準備挑戰");
+
             speak('遊戲開始', () => {
-                setTimeout(() => {
-                    setupLevel();
-                }, 100);
+                // 語音結束後，立即切換
+                hideTransitionEffect();
+                setupLevel();
             });
         });
 
