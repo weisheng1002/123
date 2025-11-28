@@ -212,7 +212,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: opacity 0.3s; /* 增加過渡效果 */
+            transition: opacity 0.3s;
         }
 
         .braille-display-with-numbers {
@@ -476,6 +476,79 @@
             border-radius: 15px;
             border: 1px solid rgba(255,255,255,0.1);
         }
+        
+        /* 過場動畫容器 (文字特效版) */
+        #transition-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 12, 41, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+            backdrop-filter: blur(5px); /* 毛玻璃效果 */
+        }
+        #transition-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        /* 過場內容區塊 */
+        .transition-content {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            transform: scale(0.8);
+            opacity: 0;
+        }
+        
+        /* 啟動動畫時的樣式 */
+        #transition-overlay.show .transition-content {
+            animation: zoomIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes zoomIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .transition-title {
+            font-size: 3rem;
+            color: #00ff88; /* 成功綠色 */
+            font-weight: 800;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+            margin: 0;
+        }
+
+        .transition-subtitle {
+            font-size: 1.5rem;
+            color: #ffffff;
+            margin: 0;
+            opacity: 0.8;
+        }
+
+        .transition-next-level {
+            font-size: 4rem;
+            color: var(--accent-color); /* 主題藍色 */
+            font-weight: 900;
+            margin-top: 10px;
+            text-shadow: 0 0 30px rgba(0, 210, 255, 0.8);
+            animation: pulse 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); text-shadow: 0 0 30px rgba(0, 210, 255, 0.8); }
+            50% { transform: scale(1.05); text-shadow: 0 0 50px rgba(0, 210, 255, 1); }
+        }
 
         @media (max-height: 800px) {
             .game-container { padding: 20px; }
@@ -487,10 +560,21 @@
             .braille-number { font-size: 2rem; height: 50px; }
             .braille-number-col { gap: 15px; padding-top: 15px; padding-bottom: 15px; }
             .key-letter, .dot-number { font-size: 1.4rem; }
+            .transition-title { font-size: 2rem; }
+            .transition-next-level { font-size: 3rem; }
         }
     </style>
 </head>
 <body>
+    <!-- 過場動畫層 -->
+    <div id="transition-overlay">
+        <div class="transition-content">
+            <h2 class="transition-title">關卡完成</h2>
+            <p class="transition-subtitle">即將進入</p>
+            <h1 class="transition-next-level" id="transition-level-name">下一關名稱</h1>
+        </div>
+    </div>
+
     <div class="game-container">
         <div id="voice-status">檢查語音中...</div>
         <div id="welcome-screen" class="screen active">
@@ -593,6 +677,10 @@
         const feedback = document.getElementById('feedback');
         const progressFill = document.getElementById('progress-fill');
         const voiceStatus = document.getElementById('voice-status');
+        
+        // 過場動畫元素
+        const transitionOverlay = document.getElementById('transition-overlay');
+        const transitionLevelName = document.getElementById('transition-level-name');
 
         // --- 全域音訊環境 (Web Audio API) ---
         let audioCtx;
@@ -892,6 +980,17 @@
 
             progressFill.style.width = `${progress}%`;
         }
+        
+        // 顯示過場特效 (文字版)
+        function showTransitionEffect(nextLevelTitle) {
+            transitionLevelName.textContent = nextLevelTitle;
+            transitionOverlay.classList.add('show');
+        }
+
+        // 隱藏過場特效
+        function hideTransitionEffect() {
+            transitionOverlay.classList.remove('show');
+        }
 
         function setupLevel() {
             const currentLevel = levels[gameState.level];
@@ -929,10 +1028,17 @@
                 feedback.textContent = "";
 
                 if (gameState.level + 1 < levels.length) { 
+                    // 1. 顯示過場特效 (傳入下一關標題)
+                    showTransitionEffect(levels[gameState.level + 1].title);
+                    
+                    // 2. 播放語音
                     speak("很好，進入下一關。", () => {
-                        // 語音結束後才切換關卡
-                        gameState.level++;
-                        setupLevel();
+                        // 3. 語音結束後，等待一小段時間再切換，讓玩家看清楚特效
+                        setTimeout(() => {
+                            hideTransitionEffect();
+                            gameState.level++;
+                            setupLevel();
+                        }, 1500); // 1.5秒後進入下一關
                     });
                 } else { 
                     handleVictory();
